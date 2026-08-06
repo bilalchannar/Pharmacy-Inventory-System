@@ -1,4 +1,4 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../database/database_helper.dart';
 import '../models/medicine.dart';
 
@@ -7,7 +7,11 @@ class MedicineService {
 
   Future<int> insertMedicine(Medicine medicine) async {
     final db = await _databaseHelper.database;
-    return await db.insert('medicines', medicine.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(
+      'medicines',
+      medicine.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Medicine>> getAllMedicines() async {
@@ -18,7 +22,12 @@ class MedicineService {
 
   Future<int> updateMedicine(Medicine medicine) async {
     final db = await _databaseHelper.database;
-    return await db.update('medicines', medicine.toMap(), where: 'id = ?', whereArgs: [medicine.id]);
+    return await db.update(
+      'medicines',
+      medicine.toMap(),
+      where: 'id = ?',
+      whereArgs: [medicine.id],
+    );
   }
 
   Future<int> deleteMedicine(int id) async {

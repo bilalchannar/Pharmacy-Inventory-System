@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/medicine.dart';
+import '../services/image_service.dart';
 import '../services/medicine_service.dart';
 import 'base_viewmodel.dart';
 
@@ -15,6 +16,8 @@ class EditMedicineViewModel extends BaseViewModel {
   late TextEditingController expiryDateController;
 
   String? _selectedCategory;
+  String? imageUrl;
+
   final List<String> categories = [
     'Tablet',
     'Capsule',
@@ -33,6 +36,7 @@ class EditMedicineViewModel extends BaseViewModel {
     quantityController = TextEditingController(text: medicine.quantity.toString());
     expiryDateController = TextEditingController(text: medicine.expiryDate);
     _selectedCategory = medicine.category;
+    imageUrl = medicine.imageUrl;
   }
 
   String? get selectedCategory => _selectedCategory;
@@ -43,7 +47,8 @@ class EditMedicineViewModel extends BaseViewModel {
   }
 
   Future<void> selectExpiryDate(BuildContext context) async {
-    final DateTime initialDate = DateTime.tryParse(medicine.expiryDate) ?? DateTime.now();
+    final DateTime initialDate =
+        DateTime.tryParse(medicine.expiryDate) ?? DateTime.now();
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
@@ -71,18 +76,45 @@ class EditMedicineViewModel extends BaseViewModel {
       return false;
     }
 
+    final price = double.tryParse(priceController.text);
+    if (price == null || price <= 0) {
+      setError('Price must be greater than 0');
+      return false;
+    }
+
+    final quantity = int.tryParse(quantityController.text);
+    if (quantity == null || quantity < 0) {
+      setError('Quantity cannot be negative');
+      return false;
+    }
+
     setBusy(true);
     clearError();
 
     try {
+      final updatedName = nameController.text.trim();
+      final updatedCategory = _selectedCategory!;
+
+      // Fetch new image URL if missing
+      String currentImageUrl = imageUrl ?? '';
+      if (currentImageUrl.isEmpty ||
+          updatedName != medicine.name ||
+          updatedCategory != medicine.category) {
+        currentImageUrl = await ImageService.fetchMedicineImageUrl(
+          updatedName,
+          updatedCategory,
+        );
+      }
+
       final updatedMedicine = Medicine(
         id: medicine.id,
-        name: nameController.text.trim(),
+        name: updatedName,
         company: companyController.text.trim(),
-        category: _selectedCategory!,
-        price: double.tryParse(priceController.text) ?? 0.0,
-        quantity: int.tryParse(quantityController.text) ?? 0,
+        category: updatedCategory,
+        price: price,
+        quantity: quantity,
         expiryDate: expiryDateController.text,
+        imageUrl: currentImageUrl,
       );
 
       await _medicineService.updateMedicine(updatedMedicine);

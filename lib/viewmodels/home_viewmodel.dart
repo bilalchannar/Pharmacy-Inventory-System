@@ -7,8 +7,142 @@ class HomeViewModel extends BaseViewModel {
   final MedicineService _medicineService = MedicineService();
   List<Medicine> _medicines = [];
 
-  List<Medicine> get medicines => _medicines;
-  bool get isEmpty => _medicines.isEmpty;
+  String _searchQuery = '';
+  String _selectedCategoryFilter = 'All';
+  String _selectedSortOption = 'Name A-Z';
+
+  final List<String> categories = [
+    'All',
+    'Tablet',
+    'Capsule',
+    'Syrup',
+    'Injection',
+    'Cream',
+    'Drops',
+    'Ointment',
+    'Powder',
+  ];
+
+  final List<String> sortOptions = [
+    'Name A-Z',
+    'Name Z-A',
+    'Price Low → High',
+    'Price High → Low',
+    'Quantity',
+    'Expiry Date',
+  ];
+
+  List<Medicine> get rawMedicines => _medicines;
+  String get searchQuery => _searchQuery;
+  String get selectedCategoryFilter => _selectedCategoryFilter;
+  String get selectedSortOption => _selectedSortOption;
+
+  // ==========================================
+  // Dashboard Metrics
+  // ==========================================
+
+  int get totalMedicines => _medicines.length;
+
+  int get totalStock => _medicines.fold(0, (sum, item) => sum + item.quantity);
+
+  double get totalValue =>
+      _medicines.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
+
+  int get lowStockCount =>
+      _medicines.where((item) => item.quantity < 10).length;
+
+  int get expiredCount =>
+      _medicines.where((item) => isMedicineExpired(item.expiryDate)).length;
+
+  // ==========================================
+  // Filtering & Sorting
+  // ==========================================
+
+  List<Medicine> get filteredMedicines {
+    List<Medicine> list = List.from(_medicines);
+
+    // Filter by search query
+    if (_searchQuery.trim().isNotEmpty) {
+      final query = _searchQuery.trim().toLowerCase();
+      list = list
+          .where((item) => item.name.toLowerCase().contains(query))
+          .toList();
+    }
+
+    // Filter by category
+    if (_selectedCategoryFilter != 'All') {
+      list = list
+          .where((item) =>
+              item.category.toLowerCase() ==
+              _selectedCategoryFilter.toLowerCase())
+          .toList();
+    }
+
+    // Sort list
+    switch (_selectedSortOption) {
+      case 'Name A-Z':
+        list.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+      case 'Name Z-A':
+        list.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        break;
+      case 'Price Low → High':
+        list.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'Price High → Low':
+        list.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case 'Quantity':
+        list.sort((a, b) => a.quantity.compareTo(b.quantity));
+        break;
+      case 'Expiry Date':
+        list.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
+        break;
+    }
+
+    return list;
+  }
+
+  bool get isEmpty => filteredMedicines.isEmpty;
+  bool get isRawEmpty => _medicines.isEmpty;
+
+  // Static helper to check expiry status
+  static bool isMedicineExpired(String expiryDateStr) {
+    try {
+      final parsedDate = DateTime.parse(expiryDateStr);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      return parsedDate.isBefore(today);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static bool isLowStock(int quantity) => quantity < 10;
+
+  // ==========================================
+  // Actions
+  // ==========================================
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
+
+  void clearSearch() {
+    _searchQuery = '';
+    notifyListeners();
+  }
+
+  void setCategoryFilter(String category) {
+    _selectedCategoryFilter = category;
+    notifyListeners();
+  }
+
+  void setSortOption(String sortOption) {
+    _selectedSortOption = sortOption;
+    notifyListeners();
+  }
 
   Future<void> fetchMedicines() async {
     setBusy(true);
@@ -34,6 +168,30 @@ class HomeViewModel extends BaseViewModel {
     } catch (e) {
       setError(e.toString());
       debugPrint('Error deleting medicine: $e');
+      return false;
+    }
+  }
+
+  Future<bool> restoreMedicine(Medicine medicine) async {
+    try {
+      await _medicineService.insertMedicine(medicine);
+      await fetchMedicines();
+      return true;
+    } catch (e) {
+      setError(e.toString());
+      debugPrint('Error restoring medicine: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteAllMedicines() async {
+    try {
+      await _medicineService.deleteAllMedicines();
+      await fetchMedicines();
+      return true;
+    } catch (e) {
+      setError(e.toString());
+      debugPrint('Error deleting all medicines: $e');
       return false;
     }
   }

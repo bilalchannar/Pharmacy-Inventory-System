@@ -31,9 +31,11 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Medicine added successfully!'),
+        SnackBar(
+          content: const Text('Medicine added successfully!'),
           backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
       AppRoutes.pop(context, true);
@@ -42,6 +44,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         SnackBar(
           content: Text('Error: ${_viewModel.errorMessage}'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
@@ -54,6 +58,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         title: const Text('Add New Medicine', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.lightGreen,
         iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 1,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -66,14 +71,15 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 children: [
                   TextFormField(
                     controller: _viewModel.nameController,
+                    textInputAction: TextInputAction.next,
                     validator: (v) =>
                         v == null || v.trim().isEmpty ? 'Please enter medicine name' : null,
                     decoration: InputDecoration(
                       labelText: 'Medicine Name',
                       prefixIcon: const Icon(Icons.badge, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
                       ),
                     ),
@@ -81,14 +87,15 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   const SizedBox(height: 15),
                   TextFormField(
                     controller: _viewModel.companyController,
+                    textInputAction: TextInputAction.next,
                     validator: (v) =>
                         v == null || v.trim().isEmpty ? 'Please enter company name' : null,
                     decoration: InputDecoration(
                       labelText: 'Company',
                       prefixIcon: const Icon(Icons.business, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
                       ),
                     ),
@@ -104,9 +111,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     decoration: InputDecoration(
                       labelText: 'Category',
                       prefixIcon: const Icon(Icons.category, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
                       ),
                     ),
@@ -114,21 +121,24 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   const SizedBox(height: 15),
                   TextFormField(
                     controller: _viewModel.priceController,
+                    textInputAction: TextInputAction.next,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                     ],
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return 'Please enter price';
-                      if (double.tryParse(v) == null) return 'Please enter a valid price';
+                      final parsed = double.tryParse(v);
+                      if (parsed == null) return 'Please enter a valid price';
+                      if (parsed <= 0) return 'Price must be greater than 0';
                       return null;
                     },
                     decoration: InputDecoration(
-                      labelText: 'Price',
+                      labelText: 'Price (Rs.)',
                       prefixIcon: const Icon(Icons.attach_money, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
                       ),
                     ),
@@ -136,6 +146,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   const SizedBox(height: 15),
                   TextFormField(
                     controller: _viewModel.quantityController,
+                    textInputAction: TextInputAction.done,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     validator: (v) {
@@ -146,9 +157,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     decoration: InputDecoration(
                       labelText: 'Quantity',
                       prefixIcon: const Icon(Icons.inventory, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
                       ),
                     ),
@@ -163,9 +174,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     decoration: InputDecoration(
                       labelText: 'Expiry Date',
                       prefixIcon: const Icon(Icons.calendar_today, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
                       ),
                     ),
@@ -179,7 +190,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.lightGreen,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: _viewModel.isBusy

@@ -6,6 +6,7 @@ class Medicine {
   double price;
   int quantity;
   String expiryDate;
+  String? imageUrl;
 
   Medicine({
     this.id,
@@ -15,6 +16,7 @@ class Medicine {
     required this.price,
     required this.quantity,
     required this.expiryDate,
+    this.imageUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +28,7 @@ class Medicine {
       'price': price,
       'quantity': quantity,
       'expiryDate': expiryDate,
+      'imageUrl': imageUrl,
     };
   }
 
@@ -38,6 +41,7 @@ class Medicine {
       price: (map['price'] as num).toDouble(),
       quantity: map['quantity'],
       expiryDate: map['expiryDate'],
+      imageUrl: map['imageUrl'],
     );
   }
 }

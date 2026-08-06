@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/medicine.dart';
+import '../services/image_service.dart';
 import '../services/medicine_service.dart';
 import 'base_viewmodel.dart';
 
@@ -60,17 +61,39 @@ class AddMedicineViewModel extends BaseViewModel {
       return false;
     }
 
+    final price = double.tryParse(priceController.text);
+    if (price == null || price <= 0) {
+      setError('Price must be greater than 0');
+      return false;
+    }
+
+    final quantity = int.tryParse(quantityController.text);
+    if (quantity == null || quantity < 0) {
+      setError('Quantity cannot be negative');
+      return false;
+    }
+
     setBusy(true);
     clearError();
 
     try {
+      final medicineName = nameController.text.trim();
+      final category = _selectedCategory!;
+
+      // Automatically fetch/generate medicine image URL
+      final imageUrl = await ImageService.fetchMedicineImageUrl(
+        medicineName,
+        category,
+      );
+
       final newMedicine = Medicine(
-        name: nameController.text.trim(),
+        name: medicineName,
         company: companyController.text.trim(),
-        category: _selectedCategory!,
-        price: double.tryParse(priceController.text) ?? 0.0,
-        quantity: int.tryParse(quantityController.text) ?? 0,
+        category: category,
+        price: price,
+        quantity: quantity,
         expiryDate: expiryDateController.text,
+        imageUrl: imageUrl,
       );
 
       await _medicineService.insertMedicine(newMedicine);
