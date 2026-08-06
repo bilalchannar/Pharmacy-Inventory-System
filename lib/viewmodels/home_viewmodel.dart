@@ -151,8 +151,14 @@ class HomeViewModel extends BaseViewModel {
     try {
       final list = await _medicineService.getAllMedicines();
       for (var medicine in list) {
-        if (medicine.imageUrl == null || medicine.imageUrl!.trim().isEmpty) {
-          medicine.imageUrl = ImageService.getCategoryImageUrl(medicine.category);
+        // Auto-assign distinct category image URL
+        final freshUrl = ImageService.getCategoryImageUrl(medicine.category);
+        if (medicine.imageUrl == null ||
+            medicine.imageUrl!.trim().isEmpty ||
+            medicine.imageUrl!.contains('1550572017') ||
+            medicine.imageUrl!.contains('1579165466') ||
+            (medicine.category == 'Ointment' && medicine.imageUrl!.contains('1556228720'))) {
+          medicine.imageUrl = freshUrl;
           await _medicineService.updateMedicine(medicine);
         }
       }

@@ -2,23 +2,23 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-/// Service responsible for automatically retrieving or generating relevant medicine image URLs.
+/// Service responsible for automatically retrieving or generating distinct medicine image URLs.
 class ImageService {
   static const Map<String, String> _categoryFallbackImages = {
     'Tablet': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80',
-    'Capsule': 'https://images.unsplash.com/photo-1550572017-edf7928d10b8?w=600&auto=format&fit=crop&q=80',
-    'Syrup': 'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=600&auto=format&fit=crop&q=80',
-    'Injection': 'https://images.unsplash.com/photo-1579165466541-71e22a308351?w=600&auto=format&fit=crop&q=80',
+    'Capsule': 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=600&auto=format&fit=crop&q=80',
+    'Syrup': 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=600&auto=format&fit=crop&q=80',
+    'Injection': 'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=600&auto=format&fit=crop&q=80',
     'Cream': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop&q=80',
-    'Ointment': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop&q=80',
+    'Ointment': 'https://images.unsplash.com/photo-1608248597263-0044e3e6b424?w=600&auto=format&fit=crop&q=80',
     'Drops': 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=600&auto=format&fit=crop&q=80',
-    'Powder': 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=600&auto=format&fit=crop&q=80',
+    'Powder': 'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=600&auto=format&fit=crop&q=80',
   };
 
   static const String _defaultFallback =
       'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80';
 
-  /// Returns a guaranteed valid fallback image URL for a given category.
+  /// Returns a guaranteed distinct, fast-loading image URL for a given category.
   static String getCategoryImageUrl(String category) {
     return _categoryFallbackImages[category] ?? _defaultFallback;
   }
