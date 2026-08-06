@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/medicine_service.dart';
-import '../models/medicine.dart';
-import 'add_medicine_screen.dart';
-import 'edit_medicine_screen.dart';
+import '../routes/app_routes.dart';
+import '../viewmodels/home_viewmodel.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,26 +10,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final MedicineService _medicineService = MedicineService();
-  List<Medicine> _medicines = [];
-  bool _isLoading = false;
+  late final HomeViewModel _viewModel;
 
-  Future<void> _loadMedicines() async {
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      final medicines = await _medicineService.getAllMedicines();
-      setState(() {
-        _medicines = medicines;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      debugPrint('Error: $e');
-    }
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = HomeViewModel();
+    _viewModel.fetchMedicines();
+  }
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
   }
 
   Future<void> _deleteMedicine(int id) async {
@@ -42,168 +33,172 @@ class _HomeScreenState extends State<HomeScreen> {
           title: const Text('Delete Medicine'),
           content: const Text('Are you sure you want to delete this medicine?'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+            TextButton(
+              onPressed: () => AppRoutes.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => AppRoutes.pop(context, true),
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
           ],
         );
       },
     );
 
     if (confirm == true) {
-      await _medicineService.deleteMedicine(id);
-      _loadMedicines();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Medicine deleted successfully!')));
+      final success = await _viewModel.deleteMedicine(id);
+      if (mounted && success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Medicine deleted successfully!')),
+        );
       }
     }
   }
-
-  void _showMedicineDetails(Medicine medicine) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          title: const Text('Medicine Details', style: TextStyle(color: Colors.lightGreen, fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.medication, color: Colors.lightGreen),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text('Name: ${medicine.name}')),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  const Icon(Icons.business, color: Colors.lightGreen),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text('Company: ${medicine.company}')),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  const Icon(Icons.category, color: Colors.lightGreen),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text('Category: ${medicine.category}')),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  const Icon(Icons.attach_money, color: Colors.lightGreen),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text('Price: Rs. ${medicine.price}')),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  const Icon(Icons.inventory, color: Colors.lightGreen),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text('Quantity: ${medicine.quantity}')),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  const Icon(Icons.calendar_today, color: Colors.lightGreen),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text('Expiry Date: ${medicine.expiryDate}')),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.lightGreen, foregroundColor: Colors.white),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Close'),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMedicines();
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medicine Inventory System', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Medicine Inventory System',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.lightGreen,
         centerTitle: true,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.lightGreen))
-          : _medicines.isEmpty
-              ? const Center(child: Text('No medicines found.', style: TextStyle(fontSize: 18, color: Colors.grey)))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(10),
-                  itemCount: _medicines.length,
-                  itemBuilder: (context, index) {
-                    final medicine = _medicines[index];
-                    return Card(
-                      elevation: 2,
-                      margin: const EdgeInsets.symmetric(vertical: 5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      child: ListTile(
-                        leading: IconButton(
-                          onPressed: () {
-                            _showMedicineDetails(medicine);
-                          },
-                          icon: const CircleAvatar(
-                            backgroundColor: Colors.lightGreen,
-                            child: Icon(Icons.medication, color: Colors.white),
-                          ),
-                        ),
-                        title: Text(medicine.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('Qty: ${medicine.quantity} | Price: Rs. ${medicine.price}'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              onPressed: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => EditMedicineScreen(medicine: medicine)),
-                                );
-                                if (result == true) {
-                                  _loadMedicines();
-                                }
-                              },
-                              icon: const Icon(Icons.edit, color: Colors.green),
-                            ),
-                            IconButton(
-                              onPressed: () => _deleteMedicine(medicine.id!),
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+      body: ListenableBuilder(
+        listenable: _viewModel,
+        builder: (context, _) {
+          if (_viewModel.isBusy) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.lightGreen),
+            );
+          }
+
+          if (_viewModel.isEmpty) {
+            return const Center(
+              child: Text(
+                'No medicines found.',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            );
+          }
+
+          final medicines = _viewModel.medicines;
+          return ListView.builder(
+            padding: const EdgeInsets.all(10),
+            itemCount: medicines.length,
+            itemBuilder: (context, index) {
+              final medicine = medicines[index];
+              return Card(
+                elevation: 2,
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                clipBehavior: Clip.antiAlias,
+                child: ExpansionTile(
+                  shape: const RoundedRectangleBorder(side: BorderSide.none),
+                  collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+                  backgroundColor: Colors.lightGreen.withValues(alpha: 0.04),
+                  iconColor: Colors.lightGreen,
+                  collapsedIconColor: Colors.grey,
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  childrenPadding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.lightGreen,
+                    child: Icon(Icons.medication, color: Colors.white),
+                  ),
+                  title: Text(
+                    medicine.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Qty: ${medicine.quantity}  |  Price: Rs. ${medicine.price}',
+                    style: TextStyle(color: Colors.grey.shade700),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () async {
+                          final result = await AppRoutes.toEditMedicineScreen(
+                            context,
+                            medicine,
+                          );
+                          if (result == true) {
+                            _viewModel.fetchMedicines();
+                          }
+                        },
+                        icon: const Icon(Icons.edit, color: Colors.green),
+                        tooltip: 'Edit Medicine',
+                      ),
+                      IconButton(
+                        onPressed: () => _deleteMedicine(medicine.id!),
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        tooltip: 'Delete Medicine',
+                      ),
+                    ],
+                  ),
+                  children: [
+                    const Divider(height: 1, color: Colors.black12),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const Icon(Icons.business, color: Colors.lightGreen, size: 20),
+                        const SizedBox(width: 10),
+                        Text('Company: ${medicine.company}'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.category, color: Colors.lightGreen, size: 20),
+                        const SizedBox(width: 10),
+                        Text('Category: ${medicine.category}'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.attach_money, color: Colors.lightGreen, size: 20),
+                        const SizedBox(width: 10),
+                        Text('Price: Rs. ${medicine.price}'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.inventory, color: Colors.lightGreen, size: 20),
+                        const SizedBox(width: 10),
+                        Text('Quantity: ${medicine.quantity}'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today, color: Colors.lightGreen, size: 20),
+                        const SizedBox(width: 10),
+                        Text('Expiry Date: ${medicine.expiryDate}'),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.lightGreen,
         onPressed: () async {
-          final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const AddMedicineScreen()));
+          final result = await AppRoutes.toAddMedicineScreen(context);
           if (result == true) {
-            _loadMedicines();
+            _viewModel.fetchMedicines();
           }
         },
         child: const Icon(Icons.add, color: Colors.white),
