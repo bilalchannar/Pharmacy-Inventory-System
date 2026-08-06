@@ -6,7 +6,6 @@ class Medicine {
   double price;
   int quantity;
   String expiryDate;
-  String? imageUrl;
 
   Medicine({
     this.id,
@@ -16,8 +15,8 @@ class Medicine {
     required this.price,
     required this.quantity,
     required this.expiryDate,
-    this.imageUrl,
   });
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -25,12 +24,12 @@ class Medicine {
       'company': company,
       'category': category,
       'price': price,
-    'quantity': quantity,
-    'expiryDate': expiryDate,
-    'imageUrl': imageUrl,
-  };
-}
-factory Medicine.fromMap(Map<String, dynamic> map) {
+      'quantity': quantity,
+      'expiryDate': expiryDate,
+    };
+  }
+
+  factory Medicine.fromMap(Map<String, dynamic> map) {
     return Medicine(
       id: map['id'],
       name: map['name'],
@@ -39,7 +38,6 @@ factory Medicine.fromMap(Map<String, dynamic> map) {
       price: (map['price'] as num).toDouble(),
       quantity: map['quantity'],
       expiryDate: map['expiryDate'],
-      imageUrl: map['imageUrl'],
     );
   }
 }

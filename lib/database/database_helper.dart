@@ -1,5 +1,8 @@
-import 'package:sqflite/sqflite.dart';
+import 'dart:io';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter/foundation.dart';
 
 class DatabaseHelper {
   DatabaseHelper._();
@@ -8,17 +11,23 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-
     _database = await _initDatabase();
-      return _database!;
+    return _database!;
   }
+
   Future<Database> _initDatabase() async {
-    final String path = join(await getDatabasesPath(), 'pharmacy.db');
+    if (Platform.isWindows || Platform.isLinux) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'pharmacy.db');
     return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
+
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS medicines (
+      CREATE TABLE medicines(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         company TEXT NOT NULL,
@@ -26,10 +35,8 @@ class DatabaseHelper {
         quantity INTEGER NOT NULL,
         price REAL NOT NULL,
         expiryDate TEXT NOT NULL,
-        imageUrl TEXT 
+        imageUrl TEXT
       )
     ''');
   }
-
-
 }
