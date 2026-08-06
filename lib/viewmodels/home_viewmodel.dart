@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/medicine.dart';
+import '../services/image_service.dart';
 import '../services/medicine_service.dart';
 import 'base_viewmodel.dart';
 
@@ -148,7 +149,14 @@ class HomeViewModel extends BaseViewModel {
     setBusy(true);
     clearError();
     try {
-      _medicines = await _medicineService.getAllMedicines();
+      final list = await _medicineService.getAllMedicines();
+      for (var medicine in list) {
+        if (medicine.imageUrl == null || medicine.imageUrl!.trim().isEmpty) {
+          medicine.imageUrl = ImageService.getCategoryImageUrl(medicine.category);
+          await _medicineService.updateMedicine(medicine);
+        }
+      }
+      _medicines = list;
     } catch (e) {
       setError(e.toString());
       debugPrint('Error fetching medicines: $e');

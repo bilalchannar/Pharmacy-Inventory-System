@@ -5,31 +5,36 @@ import 'package:http/http.dart' as http;
 /// Service responsible for automatically retrieving or generating relevant medicine image URLs.
 class ImageService {
   static const Map<String, String> _categoryFallbackImages = {
-    'Tablet': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop',
-    'Capsule': 'https://images.unsplash.com/photo-1550572017-edf7928d10b8?w=500&auto=format&fit=crop',
-    'Syrup': 'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=500&auto=format&fit=crop',
-    'Injection': 'https://images.unsplash.com/photo-1579165466541-71e22a308351?w=500&auto=format&fit=crop',
-    'Cream': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500&auto=format&fit=crop',
-    'Ointment': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500&auto=format&fit=crop',
-    'Drops': 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=500&auto=format&fit=crop',
-    'Powder': 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=500&auto=format&fit=crop',
+    'Tablet': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80',
+    'Capsule': 'https://images.unsplash.com/photo-1550572017-edf7928d10b8?w=600&auto=format&fit=crop&q=80',
+    'Syrup': 'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=600&auto=format&fit=crop&q=80',
+    'Injection': 'https://images.unsplash.com/photo-1579165466541-71e22a308351?w=600&auto=format&fit=crop&q=80',
+    'Cream': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop&q=80',
+    'Ointment': 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop&q=80',
+    'Drops': 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=600&auto=format&fit=crop&q=80',
+    'Powder': 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=600&auto=format&fit=crop&q=80',
   };
 
   static const String _defaultFallback =
-      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop';
+      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80';
+
+  /// Returns a guaranteed valid fallback image URL for a given category.
+  static String getCategoryImageUrl(String category) {
+    return _categoryFallbackImages[category] ?? _defaultFallback;
+  }
 
   /// Automatically searches online for a relevant image based on medicine name and category.
   static Future<String> fetchMedicineImageUrl(String medicineName, String category) async {
     final cleanQuery = medicineName.trim();
     if (cleanQuery.isEmpty) {
-      return _categoryFallbackImages[category] ?? _defaultFallback;
+      return getCategoryImageUrl(category);
     }
 
     try {
       // Search Wikipedia REST API for relevant medicine image thumbnail
       final encodedQuery = Uri.encodeComponent(cleanQuery);
       final url = Uri.parse(
-        'https://en.wikipedia.org/w/api.php?action=query&titles=$encodedQuery&prop=pageimages&format=json&pithumbsize=500',
+        'https://en.wikipedia.org/w/api.php?action=query&titles=$encodedQuery&prop=pageimages&format=json&pithumbsize=600',
       );
 
       final response = await http.get(url).timeout(const Duration(seconds: 3));
@@ -51,7 +56,6 @@ class ImageService {
       debugPrint('Online image search error/timeout: $e');
     }
 
-    // Return curated category fallback if online search yields no image or times out
-    return _categoryFallbackImages[category] ?? _defaultFallback;
+    return getCategoryImageUrl(category);
   }
 }

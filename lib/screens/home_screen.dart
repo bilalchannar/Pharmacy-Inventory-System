@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/medicine.dart';
 import '../routes/app_routes.dart';
+import '../services/image_service.dart';
 import '../viewmodels/home_viewmodel.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -202,52 +203,55 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildMedicineImage(Medicine medicine, {double size = 48}) {
-    final url = medicine.imageUrl;
+    final rawUrl = medicine.imageUrl;
+    final urlToUse = (rawUrl != null && rawUrl.trim().isNotEmpty)
+        ? rawUrl
+        : ImageService.getCategoryImageUrl(medicine.category);
+
     final heroTag = 'med_img_${medicine.id ?? medicine.name}';
 
-    Widget childWidget;
-    if (url == null || url.trim().isEmpty) {
-      childWidget = CircleAvatar(
-        radius: size / 2,
-        backgroundColor: Colors.lightGreen,
-        child: Icon(Icons.medication, color: Colors.white, size: size * 0.5),
-      );
-    } else {
-      childWidget = ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Image.network(
-          url,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              width: size,
-              height: size,
-              color: Colors.lightGreen.withValues(alpha: 0.1),
-              child: const Center(
-                child: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.lightGreen,
-                  ),
+    final childWidget = ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Image.network(
+        urlToUse,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: size,
+            height: size,
+            color: Colors.lightGreen.withValues(alpha: 0.1),
+            child: const Center(
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.lightGreen,
                 ),
               ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return CircleAvatar(
-              radius: size / 2,
-              backgroundColor: Colors.lightGreen,
-              child: Icon(Icons.medication, color: Colors.white, size: size * 0.5),
-            );
-          },
-        ),
-      );
-    }
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Image.network(
+            ImageService.getCategoryImageUrl(medicine.category),
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return CircleAvatar(
+                radius: size / 2,
+                backgroundColor: Colors.lightGreen,
+                child: Icon(Icons.medication, color: Colors.white, size: size * 0.5),
+              );
+            },
+          );
+        },
+      ),
+    );
 
     return Hero(tag: heroTag, child: childWidget);
   }
@@ -323,10 +327,10 @@ class _HomeScreenState extends State<HomeScreen> {
               // Dashboard Summary Cards
               // ==========================================
               SizedBox(
-                height: 98,
+                height: 125,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   children: [
                     _buildDashboardCard(
                       title: 'Total Items',
