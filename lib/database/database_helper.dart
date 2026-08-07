@@ -29,17 +29,26 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = kIsWeb ? 'pharmacy_v1.db' : join(await getDatabasesPath(), 'pharmacy.db');
+    String path = kIsWeb ? 'pharmacy_v2.db' : join(await getDatabasesPath(), 'pharmacy.db');
     
-    // On Web, we open without version/onCreate to avoid the PRAGMA null-result bug.
-    // We then handle table creation manually if it's a new database.
-    final db = await openDatabase(path).timeout(const Duration(seconds: 10));
-    print('SQL_LOG: Database handle acquired safely.');
-
-    // Manual "onCreate" logic that is Web-Safe
+    Database? db;
     try {
-      print('SQL_LOG: Verifying/Creating tables manually...');
-      // Using rawQuery + catch null bug to ensure table exists
+      print('SQL_LOG: Opening database ($path)...');
+      db = await openDatabase(path).timeout(const Duration(seconds: 5));
+      print('SQL_LOG: Database handle acquired safely.');
+    } catch (e) {
+      print('SQL_LOG: Primary open failed ($e). Attempting in-memory web database fallback...');
+      try {
+        db = await openDatabase(inMemoryDatabasePath);
+        print('SQL_LOG: In-memory fallback database handle acquired.');
+      } catch (err) {
+        print('SQL_LOG: Fallback failed: $err');
+        rethrow;
+      }
+    }
+
+    // Ensure table exists safely
+    try {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS medicines(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,10 +61,10 @@ class DatabaseHelper {
           imageUrl TEXT
         )
       ''');
-      print('SQL_LOG: Table verification successful.');
+      print('SQL_LOG: Table verification complete.');
     } catch (e) {
       if (e.toString().contains('unsupported result null')) {
-        print('SQL_LOG: Table verification success (ignored null result bug).');
+        print('SQL_LOG: Table verification complete (ignored null result).');
       } else {
         rethrow;
       }
@@ -69,16 +78,44 @@ class DatabaseHelper {
     final db = await database;
     if (db == null) return;
 
-    final queries = sql.split(';').where((q) => q.trim().isNotEmpty).toList();
-    
+    final rawQueryString = sql.trim();
+    if (rawQueryString.isEmpty) return;
+
+    // Split multiple queries by semicolon, preserving single queries
+    List<String> queries = rawQueryString
+        .split(';')
+        .map((q) => q.trim())
+        .where((q) => q.isNotEmpty)
+        .toList();
+
+    if (queries.isEmpty && rawQueryString.isNotEmpty) {
+      queries = [rawQueryString];
+    }
+
     for (var query in queries) {
-      final trimmed = query.trim();
+      var trimmed = query.trim();
+      if (trimmed.isEmpty) continue;
+
+      // Smart check: If user pasted values directly like ('Name', 'Company', ...), prepend INSERT statement
+      if (trimmed.startsWith('(') && !trimmed.toLowerCase().startsWith('insert')) {
+        trimmed = 'INSERT INTO medicines (name, company, category, quantity, price, expiryDate, imageUrl) VALUES $trimmed';
+      }
+
       try {
-        // Use rawUpdate for inserts as it handles results better than execute
-        await db.rawUpdate(trimmed);
+        final lower = trimmed.toLowerCase();
+        if (lower.startsWith('select')) {
+          await db.rawQuery(trimmed);
+        } else if (lower.startsWith('insert')) {
+          await db.rawInsert(trimmed);
+        } else if (lower.startsWith('update') || lower.startsWith('delete')) {
+          await db.rawUpdate(trimmed);
+        } else {
+          await db.execute(trimmed);
+        }
+        print('SQL_LOG: Executed successfully: $trimmed');
       } catch (e) {
         if (e.toString().contains('unsupported result null')) {
-          print('SQL_LOG: Statement success (ignored null result).');
+          print('SQL_LOG: Statement executed with null result (ignored web bug).');
         } else {
           print('SQL_LOG: SQL Error: $e');
           rethrow;
@@ -88,3 +125,4 @@ class DatabaseHelper {
     print('SQL_LOG: SQL Script Finished.');
   }
 }
+
