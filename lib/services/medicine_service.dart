@@ -1,4 +1,3 @@
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../database/database_helper.dart';
 import '../models/medicine.dart';
 
@@ -7,21 +6,26 @@ class MedicineService {
 
   Future<int> insertMedicine(Medicine medicine) async {
     final db = await _databaseHelper.database;
+    if (db == null) throw Exception("Database not initialized");
+    
     return await db.insert(
       'medicines',
       medicine.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   Future<List<Medicine>> getAllMedicines() async {
     final db = await _databaseHelper.database;
+    if (db == null) throw Exception("Database not initialized");
+
     final medicines = await db.query('medicines');
     return medicines.map((m) => Medicine.fromMap(m)).toList();
   }
 
   Future<int> updateMedicine(Medicine medicine) async {
     final db = await _databaseHelper.database;
+    if (db == null) throw Exception("Database not initialized");
+
     return await db.update(
       'medicines',
       medicine.toMap(),
@@ -32,11 +36,19 @@ class MedicineService {
 
   Future<int> deleteMedicine(int id) async {
     final db = await _databaseHelper.database;
+    if (db == null) throw Exception("Database not initialized");
+
     return await db.delete('medicines', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> deleteAllMedicines() async {
     final db = await _databaseHelper.database;
+    if (db == null) throw Exception("Database not initialized");
+
     return await db.delete('medicines');
+  }
+
+  Future<void> runRawSql(String sql) async {
+    await _databaseHelper.executeRawSql(sql);
   }
 }

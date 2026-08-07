@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import '../models/medicine.dart';
 import '../services/image_service.dart';
 import '../services/medicine_service.dart';
@@ -62,24 +61,17 @@ class HomeViewModel extends BaseViewModel {
   List<Medicine> get filteredMedicines {
     List<Medicine> list = List.from(_medicines);
 
-    // Filter by search query
     if (_searchQuery.trim().isNotEmpty) {
       final query = _searchQuery.trim().toLowerCase();
-      list = list
-          .where((item) => item.name.toLowerCase().contains(query))
-          .toList();
+      list = list.where((item) => item.name.toLowerCase().contains(query)).toList();
     }
 
-    // Filter by category
     if (_selectedCategoryFilter != 'All') {
       list = list
-          .where((item) =>
-              item.category.toLowerCase() ==
-              _selectedCategoryFilter.toLowerCase())
+          .where((item) => item.category.toLowerCase() == _selectedCategoryFilter.toLowerCase())
           .toList();
     }
 
-    // Sort list
     switch (_selectedSortOption) {
       case 'Name A-Z':
         list.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
@@ -107,7 +99,6 @@ class HomeViewModel extends BaseViewModel {
   bool get isEmpty => filteredMedicines.isEmpty;
   bool get isRawEmpty => _medicines.isEmpty;
 
-  // Static helper to check expiry status
   static bool isMedicineExpired(String expiryDateStr) {
     try {
       final parsedDate = DateTime.parse(expiryDateStr);
@@ -122,7 +113,7 @@ class HomeViewModel extends BaseViewModel {
   static bool isLowStock(int quantity) => quantity < 10;
 
   // ==========================================
-  // Actions
+  // Business Logic Functions
   // ==========================================
 
   void setSearchQuery(String query) {
@@ -149,26 +140,28 @@ class HomeViewModel extends BaseViewModel {
     setBusy(true);
     clearError();
     try {
-      final list = await _medicineService.getAllMedicines();
-      for (var medicine in list) {
-        // Auto-assign distinct category image URL
-        final freshUrl = ImageService.getCategoryImageUrl(medicine.category);
-        if (medicine.imageUrl == null ||
-            medicine.imageUrl!.trim().isEmpty ||
-            medicine.imageUrl!.contains('1550572017') ||
-            medicine.imageUrl!.contains('1579165466') ||
-            (medicine.category == 'Ointment' && medicine.imageUrl!.contains('1556228720'))) {
-          medicine.imageUrl = freshUrl;
-          await _medicineService.updateMedicine(medicine);
-        }
-      }
-      _medicines = list;
+      _medicines = await _medicineService.getAllMedicines();
+      // Side-effect moved to a separate function or handled during creation/update
     } catch (e) {
       setError(e.toString());
-      debugPrint('Error fetching medicines: $e');
     } finally {
       setBusy(false);
     }
+  }
+
+  Future<void> syncMedicineImages() async {
+    for (var medicine in _medicines) {
+      final freshUrl = ImageService.getCategoryImageUrl(medicine.category);
+      if (medicine.imageUrl == null ||
+          medicine.imageUrl!.trim().isEmpty ||
+          medicine.imageUrl!.contains('1550572017') ||
+          medicine.imageUrl!.contains('1579165466') ||
+          (medicine.category == 'Ointment' && medicine.imageUrl!.contains('1556228720'))) {
+        medicine.imageUrl = freshUrl;
+        await _medicineService.updateMedicine(medicine);
+      }
+    }
+    notifyListeners();
   }
 
   Future<bool> deleteMedicine(int id) async {
@@ -181,7 +174,6 @@ class HomeViewModel extends BaseViewModel {
       return false;
     } catch (e) {
       setError(e.toString());
-      debugPrint('Error deleting medicine: $e');
       return false;
     }
   }
@@ -193,7 +185,6 @@ class HomeViewModel extends BaseViewModel {
       return true;
     } catch (e) {
       setError(e.toString());
-      debugPrint('Error restoring medicine: $e');
       return false;
     }
   }
@@ -205,8 +196,22 @@ class HomeViewModel extends BaseViewModel {
       return true;
     } catch (e) {
       setError(e.toString());
-      debugPrint('Error deleting all medicines: $e');
       return false;
+    }
+  }
+
+  Future<bool> runSql(String sql) async {
+    setBusy(true);
+    clearError();
+    try {
+      await _medicineService.runRawSql(sql);
+      await fetchMedicines();
+      return true;
+    } catch (e) {
+      setError(e.toString());
+      return false;
+    } finally {
+      setBusy(false);
     }
   }
 }

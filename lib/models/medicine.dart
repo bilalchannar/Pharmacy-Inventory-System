@@ -44,4 +44,29 @@ class Medicine {
       imageUrl: map['imageUrl'],
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Medicine &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          company == other.company &&
+          category == other.category &&
+          price == other.price &&
+          quantity == other.quantity &&
+          expiryDate == other.expiryDate &&
+          imageUrl == other.imageUrl;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      company.hashCode ^
+      category.hashCode ^
+      price.hashCode ^
+      quantity.hashCode ^
+      expiryDate.hashCode ^
+      imageUrl.hashCode;
 }

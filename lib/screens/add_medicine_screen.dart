@@ -55,7 +55,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Medicine', style: TextStyle(color: Colors.white)),
+        title: const Text('Add New Medicine', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.lightGreen,
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 1,
@@ -72,50 +72,31 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   TextFormField(
                     controller: _viewModel.nameController,
                     textInputAction: TextInputAction.next,
-                    validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Please enter medicine name' : null,
-                    decoration: InputDecoration(
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Please enter medicine name' : null,
+                    decoration: const InputDecoration(
                       labelText: 'Medicine Name',
-                      prefixIcon: const Icon(Icons.badge, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
-                      ),
+                      prefixIcon: Icon(Icons.badge),
                     ),
                   ),
                   const SizedBox(height: 15),
                   TextFormField(
                     controller: _viewModel.companyController,
                     textInputAction: TextInputAction.next,
-                    validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Please enter company name' : null,
-                    decoration: InputDecoration(
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Please enter company name' : null,
+                    decoration: const InputDecoration(
                       labelText: 'Company',
-                      prefixIcon: const Icon(Icons.business, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
-                      ),
+                      prefixIcon: Icon(Icons.business),
                     ),
                   ),
                   const SizedBox(height: 15),
                   DropdownButtonFormField<String>(
                     initialValue: _viewModel.selectedCategory,
-                    items: _viewModel.categories
-                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                        .toList(),
+                    items: _viewModel.categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                     onChanged: (v) => _viewModel.setSelectedCategory(v),
                     validator: (v) => v == null ? 'Please select a category' : null,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Category',
-                      prefixIcon: const Icon(Icons.category, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
-                      ),
+                      prefixIcon: Icon(Icons.category),
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -123,9 +104,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     controller: _viewModel.priceController,
                     textInputAction: TextInputAction.next,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return 'Please enter price';
                       final parsed = double.tryParse(v);
@@ -133,14 +112,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       if (parsed <= 0) return 'Price must be greater than 0';
                       return null;
                     },
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Price (Rs.)',
-                      prefixIcon: const Icon(Icons.attach_money, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
-                      ),
+                      prefixIcon: Icon(Icons.attach_money),
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -154,14 +128,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       if (int.tryParse(v) == null) return 'Please enter a valid quantity';
                       return null;
                     },
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Quantity',
-                      prefixIcon: const Icon(Icons.inventory, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
-                      ),
+                      prefixIcon: Icon(Icons.inventory),
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -169,16 +138,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     controller: _viewModel.expiryDateController,
                     readOnly: true,
                     onTap: () => _viewModel.selectExpiryDate(context),
-                    validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Please select expiry date' : null,
-                    decoration: InputDecoration(
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Please select expiry date' : null,
+                    decoration: const InputDecoration(
                       labelText: 'Expiry Date',
-                      prefixIcon: const Icon(Icons.calendar_today, color: Colors.lightGreen),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.lightGreen, width: 2),
-                      ),
+                      prefixIcon: Icon(Icons.calendar_today),
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -187,18 +150,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     height: 50,
                     child: ElevatedButton(
                       onPressed: _viewModel.isBusy ? null : _handleSave,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.lightGreen,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
                       child: _viewModel.isBusy
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Save Medicine',
-                              style: TextStyle(fontSize: 18, color: Colors.white),
-                            ),
+                          : const Text('Save Medicine', style: TextStyle(fontSize: 18, color: Colors.white)),
                     ),
                   ),
                 ],

@@ -34,7 +34,7 @@ class ImageService {
       // Search Wikipedia REST API for relevant medicine image thumbnail
       final encodedQuery = Uri.encodeComponent(cleanQuery);
       final url = Uri.parse(
-        'https://en.wikipedia.org/w/api.php?action=query&titles=$encodedQuery&prop=pageimages&format=json&pithumbsize=600',
+        'https://en.wikipedia.org/w/api.php?action=query&titles=$encodedQuery&prop=pageimages&format=json&pithumbsize=600&origin=*',
       );
 
       final response = await http.get(url).timeout(const Duration(seconds: 3));
